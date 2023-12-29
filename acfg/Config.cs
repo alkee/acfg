@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace acfg
 {
@@ -15,12 +14,8 @@ namespace acfg
             serializer.Formatting = jsonIndent
                 ? Formatting.Indented
                 : Formatting.None;
-
-            // Config 를 상속한 class 를 다시 상속한 후 serialize 하는 경우 "NullValue": null
-            //  이 json 에 삽입되어 생성된다.(상속된 class member 들을 구분하기 위함 일 듯)
-            //  이를 제거하기위해..
-            serializer.ContractResolver = new NullValueExclusionResolver();
         }
+
         public string ToJson(Config? ignoreValues = null)
         { // ignoreValues 와 같은 값을 갖는 멤버는 저장하지 않음. null 이면 전체 저장
             if (ignoreValues == null)
@@ -71,21 +66,6 @@ namespace acfg
             {
                 dst.Remove(propName);
             }
-        }
-
-        private class NullValueExclusionResolver
-            : DefaultContractResolver
-        {
-            protected override JsonProperty CreateProperty(System.Reflection.MemberInfo member, MemberSerialization memberSerialization)
-            {
-                JsonProperty property = base.CreateProperty(member, memberSerialization);
-                if (property.PropertyName == "NullValue")
-                {
-                    property.ShouldSerialize = instance => false;
-                }
-                return property;
-            }
-
         }
         #endregion
     }
