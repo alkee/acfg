@@ -53,10 +53,11 @@ public class ConfigTest
     {
         var sample1 = new TestConfig();
         var fullJson = sample1.ToJson();
-        ShouldHave(fullJson, "SomeghingNull");
-        ShouldHave(fullJson, "Value1");
-        ShouldHave(fullJson, "Value2");
-        ShouldHave(fullJson, "Value3");
+        fullJson
+            .ShouldHave("SomeghingNull")
+            .ShouldHave("Value1")
+            .ShouldHave("Value2")
+            .ShouldHave("Value3");
     }
 
     [TestMethod]
@@ -64,16 +65,18 @@ public class ConfigTest
     {
         var sample1 = new TestConfig();
         var nothing = sample1.ToJson(sample1);
-        ShouldBeEmptyObject(nothing);
+        nothing
+            .ShouldBeEmptyObject();
 
         var sample2 = new TestConfig
         {
             Value2 = "differ", // Value2 만 다름
         };
         var ignoredJson = sample2.ToJson(new TestConfig());
-        ShouldNotHave(ignoredJson, "Value1");
-        ShouldHave(ignoredJson, "Value2");
-        ShouldNotHave(ignoredJson, "Value3");
+        ignoredJson
+            .ShouldNotHave("Value1")
+            .ShouldHave("Value2")
+            .ShouldNotHave("Value3");
     }
 
     [TestMethod]
@@ -81,8 +84,9 @@ public class ConfigTest
     {
         var subConfig = new TestSubConfig();
         var json = subConfig.ToJson();
-        ShouldHave(json, "SubValue1"); // subclass value
-        ShouldHave(json, "Value1"); // super class value
+        json
+            .ShouldHave("SubValue1") // subclass value
+            .ShouldHave("Value1"); // super class value
     }
 
     [TestMethod]
@@ -105,16 +109,19 @@ public class ConfigTest
 
         // save scenario
         var defaultconfigJson = defaultConfig.ToJson(devConfig);
-        ShouldHave(defaultconfigJson, "Value1");
-        ShouldHave(defaultconfigJson, "Value2");
-        // devConfig 와 같으면 저장되어있지 않아야 함
-        ShouldNotHave(defaultconfigJson, "Value3");
+
+        defaultconfigJson
+            .ShouldHave("Value1")
+            .ShouldHave("Value2")
+            // devConfig 와 같으면 저장되어있지 않아야 함
+            .ShouldNotHave("Value3");
 
         var userconfigJson = userConfig.ToJson(defaultConfig);
-        ShouldHave(userconfigJson, "Value1");
-        // defaultConfig 와 같으면 저장되어있지 않아야 함
-        ShouldNotHave(userconfigJson, "Value2");
-        ShouldNotHave(userconfigJson, "Value3");
+        userconfigJson
+            .ShouldHave("Value1")
+            // defaultConfig 와 같으면 저장되어있지 않아야 함
+            .ShouldNotHave("Value2")
+            .ShouldNotHave("Value3");
 
 
         // load scenario
@@ -126,32 +133,4 @@ public class ConfigTest
         Assert.AreEqual(1000, testUserConfig.Value1);
         Assert.AreEqual("default", testUserConfig.Value2);
     }
-
-    #region helpers
-    private static string GetJsonProperty(string json, string propertyName)
-    {
-        var obj = JObject.Parse(json);
-        var prop = obj.Property(propertyName);
-        if (prop is null) return "";
-        return prop.ToString();
-    }
-
-    private static void ShouldBeEmptyObject(string json)
-    {
-        var obj = JObject.Parse(json);
-        Assert.IsNotNull(obj);
-        Assert.IsFalse(obj.Properties().Any());
-    }
-
-    private static void ShouldNotHave(string json, string propertyName)
-    {
-        var obj = JObject.Parse(json);
-        Assert.IsFalse(obj.ContainsKey(propertyName));
-    }
-    private static void ShouldHave(string json, string propertyName)
-    {
-        var obj = JObject.Parse(json);
-        Assert.IsTrue(obj.ContainsKey(propertyName));
-    }
-    #endregion
 }

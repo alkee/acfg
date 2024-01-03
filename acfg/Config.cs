@@ -44,28 +44,31 @@ namespace acfg
             return sw.ToString();
         }
 
-        private static void RemoveEqualProperties(JObject dst, JObject src)
+        private static void RemoveEqualProperties(JToken? dst, JToken? src)
         {
             // https://github.com/JamesNK/Newtonsoft.Json/issues/2613
             // https://stackoverflow.com/questions/33022993
+            if (src == null || dst == null) return;
+            if (dst.Type != src.Type) return;
 
-            var values = dst
+            var props = dst
                 .OfType<JProperty>();
-            var removables = new List<string>();
-            foreach (var jprop in values)
+            var removables = new List<JProperty>();
+            foreach (var jprop in props)
             {
+                if (jprop.HasValues == false) continue;
+
                 var dstValue = jprop.Value;
                 var srcValue = src[jprop.Name];
-                // recursive 한 동작은 지원하지 않음.. object 내 일부 요솜소만 같을 경우 등..
+
                 if (dstValue?.ToString() == srcValue?.ToString())
                 {
-                    removables.Add(jprop.Name);
+                    removables.Add(jprop);
                 }
+                RemoveEqualProperties(dstValue, srcValue);
             }
-            foreach (var propName in removables)
-            {
-                dst.Remove(propName);
-            }
+            foreach (var prop in removables)
+                prop.Remove();
         }
         #endregion
     }
